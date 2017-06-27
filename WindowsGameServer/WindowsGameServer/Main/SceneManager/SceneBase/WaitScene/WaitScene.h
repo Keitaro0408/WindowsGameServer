@@ -44,7 +44,7 @@ private:
 	std::vector<GameDataManager::PlayerData> m_PlayerList;
 	RecvData			  m_RecvData;
 	SendData			  m_SendData;
-	int 	    		  m_Socket;
+	SOCKET 	    		  m_Socket;
 	sockaddr_in 		  m_Addr;
 	fd_set  			  m_Fds, m_Readfds;
 	timeval 			  m_TimeOut;

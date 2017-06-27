@@ -98,7 +98,7 @@ void WaitScene::RecvControl(int _socket)
 
 
 	SetIsOk();
-	std::system("clear");
+	std::system("cls");
 
 	for (unsigned int i = 0; i < m_PlayerList.size(); i++)
 	{

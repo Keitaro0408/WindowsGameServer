@@ -66,7 +66,10 @@ SceneBase::SceneID GameScene::Update()
 
 void GameScene::ConnectLoop()
 {
-	int sock = socket(AF_INET, SOCK_DGRAM, 0);
+	WSAData wsaData;
+	WSAStartup(MAKEWORD(2, 0), &wsaData);
+
+	SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
 	sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(50000);
@@ -93,7 +96,8 @@ void GameScene::ConnectLoop()
 		if (FD_ISSET(sock, &fds))
 		{
 			recvfrom(sock, reinterpret_cast<char*>(&m_RecvData), sizeof(RecvData), 0, (sockaddr*)&addr, &addr_len);
-			if (m_RecvData.PlayerId <= playerNum)
+			if (m_RecvData.PlayerId <= playerNum && 
+				m_RecvData.PlayerId != 0)
 			{
 				m_pPlayerData[m_RecvData.PlayerId - 1].Id = m_RecvData.PlayerId;
 				if (m_RecvData.KeyCommand[KEY_LEFT] == KEY_ON)
@@ -153,8 +157,8 @@ void GameScene::ConnectLoop()
 				{
 					m_PlayerState[m_RecvData.PlayerId - 1].JumpAcceleration = 0.f;
 				}
+				sendto(sock, reinterpret_cast<char*>(m_pPlayerData), sizeof(SendData)*playerNum, 0, (struct sockaddr *)&addr, sizeof(addr));
 			}
-			sendto(sock, reinterpret_cast<char*>(m_pPlayerData), sizeof(SendData)*playerNum, 0, (struct sockaddr *)&addr, sizeof(addr));
 		}
 	}
 	closesocket(sock);

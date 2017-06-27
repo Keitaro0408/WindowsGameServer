@@ -28,7 +28,7 @@ void ServerStateDisplay::Loop()
 	while (!m_IsEnd)
 	{
 		Sleep(1000);
-		std::system("clear");
+		std::system("cls");
 		printf("+------------+\n");
 		printf("| PlayerData |\n");
 		printf("+------------+\n");
