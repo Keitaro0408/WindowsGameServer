@@ -68,7 +68,6 @@ void GameScene::ConnectLoop()
 {
 	WSAData wsaData;
 	WSAStartup(MAKEWORD(2, 0), &wsaData);
-
 	SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
 	sockaddr_in addr;
 	addr.sin_family = AF_INET;
@@ -83,91 +82,112 @@ void GameScene::ConnectLoop()
 
 	timeOut.tv_sec = 2;
 	timeOut.tv_usec = 0;
-
 	int playerNum = GameDataManager::GetInstance()->GetPlayerNum();
 
-	while (!m_IsThreadEnd)
+	std::thread RecvThread([&]()
 	{
-		memcpy(&fds, &readFds, sizeof(fd_set));
-
-		select(sock + 1, &fds, NULL, NULL, &timeOut);
-		int addr_len = sizeof(sockaddr_in);
-
-		if (FD_ISSET(sock, &fds))
+		while (!m_IsThreadEnd)
 		{
-			recvfrom(sock, reinterpret_cast<char*>(&m_RecvData), sizeof(RecvData), 0, (sockaddr*)&addr, &addr_len);
-			if (m_RecvData.PlayerId <= playerNum && 
-				m_RecvData.PlayerId != 0)
+			memcpy(&fds, &readFds, sizeof(fd_set));
+
+			select(sock + 1, &fds, NULL, NULL, &timeOut);
+			int addr_len = sizeof(sockaddr_in);
+
+			if (FD_ISSET(sock, &fds))
 			{
-				m_pPlayerData[m_RecvData.PlayerId - 1].Id = m_RecvData.PlayerId;
-				if (m_RecvData.KeyCommand[KEY_LEFT] == KEY_ON)
+				recvfrom(sock, reinterpret_cast<char*>(&m_RecvData), sizeof(RecvData), 0, (sockaddr*)&addr, &addr_len);
+				if (m_RecvData.PlayerId <= playerNum &&
+					m_RecvData.PlayerId != 0)
 				{
-					m_pPlayerData[m_RecvData.PlayerId - 1].IsRight = false;
-					m_pPlayerData[m_RecvData.PlayerId - 1].PosX -= 2.5f;
-					if (m_PlayerState[m_RecvData.PlayerId - 1].InpactForceX > 0)
+					m_pPlayerData[m_RecvData.PlayerId - 1].Id = m_RecvData.PlayerId;
+					if (m_RecvData.KeyCommand[KEY_LEFT] == KEY_ON)
 					{
-						m_PlayerState[m_RecvData.PlayerId - 1].InpactForceX -= 0.2f;
-					}
-					int leftPlayerMapChipNumX = (m_pPlayerData[m_RecvData.PlayerId - 1].PosX - 30.f) / CHIP_WIDTH;
-					int leftPlayerMapChipNumY = m_pPlayerData[m_RecvData.PlayerId - 1].PosY / CHIP_WIDTH;
-					if (m_pMap->GetMapData().Data[leftPlayerMapChipNumY][leftPlayerMapChipNumX])
-					{
-						m_pPlayerData[m_RecvData.PlayerId - 1].PosX += 2.5f;
-					}
-				}
-
-				if (m_RecvData.KeyCommand[KEY_RIGHT] == KEY_ON)
-				{
-					m_pPlayerData[m_RecvData.PlayerId - 1].IsRight = true;
-					m_pPlayerData[m_RecvData.PlayerId - 1].PosX += 2.5f;
-					if (m_PlayerState[m_RecvData.PlayerId - 1].InpactForceX < 0)
-					{
-						m_PlayerState[m_RecvData.PlayerId - 1].InpactForceX += 0.2f;
-					}
-					int rightPlayerMapChipNumX = (m_pPlayerData[m_RecvData.PlayerId - 1].PosX + 30.f) / CHIP_WIDTH;
-					int rightPlayerMapChipNumY = m_pPlayerData[m_RecvData.PlayerId - 1].PosY / CHIP_WIDTH;
-					if (m_pMap->GetMapData().Data[rightPlayerMapChipNumY][rightPlayerMapChipNumX])
-					{
+						m_pPlayerData[m_RecvData.PlayerId - 1].IsRight = false;
 						m_pPlayerData[m_RecvData.PlayerId - 1].PosX -= 2.5f;
-					}
-				}
-
-				if (m_RecvData.KeyCommand[KEY_FIRE] == KEY_PUSH)
-				{
-					printf("push Fire\n");
-					for (int i = 0; i < 3; i++)
-					{
-						if (!m_pPlayerData[m_RecvData.PlayerId - 1].bulletData[i].IsEnable)
+						if (m_PlayerState[m_RecvData.PlayerId - 1].InpactForceX > 0)
 						{
-							m_pPlayerData[m_RecvData.PlayerId - 1].bulletData[i].IsEnable = true;
-							m_pPlayerData[m_RecvData.PlayerId - 1].bulletData[i].IsRight = m_pPlayerData[m_RecvData.PlayerId - 1].IsRight;
-							m_pPlayerData[m_RecvData.PlayerId - 1].bulletData[i].PosX = m_pPlayerData[m_RecvData.PlayerId - 1].PosX;
-							m_pPlayerData[m_RecvData.PlayerId - 1].bulletData[i].PosY = m_pPlayerData[m_RecvData.PlayerId - 1].PosY;
-							break;
+							m_PlayerState[m_RecvData.PlayerId - 1].InpactForceX -= 0.2f;
+						}
+						int leftPlayerMapChipNumX = (m_pPlayerData[m_RecvData.PlayerId - 1].PosX - 30.f) / CHIP_WIDTH;
+						int leftPlayerMapChipNumY = m_pPlayerData[m_RecvData.PlayerId - 1].PosY / CHIP_WIDTH;
+						if (m_pMap->GetMapData().Data[leftPlayerMapChipNumY][leftPlayerMapChipNumX])
+						{
+							m_pPlayerData[m_RecvData.PlayerId - 1].PosX += 2.5f;
 						}
 					}
+
+					if (m_RecvData.KeyCommand[KEY_RIGHT] == KEY_ON)
+					{
+						m_pPlayerData[m_RecvData.PlayerId - 1].IsRight = true;
+						m_pPlayerData[m_RecvData.PlayerId - 1].PosX += 2.5f;
+						if (m_PlayerState[m_RecvData.PlayerId - 1].InpactForceX < 0)
+						{
+							m_PlayerState[m_RecvData.PlayerId - 1].InpactForceX += 0.2f;
+						}
+						int rightPlayerMapChipNumX = (m_pPlayerData[m_RecvData.PlayerId - 1].PosX + 30.f) / CHIP_WIDTH;
+						int rightPlayerMapChipNumY = m_pPlayerData[m_RecvData.PlayerId - 1].PosY / CHIP_WIDTH;
+						if (m_pMap->GetMapData().Data[rightPlayerMapChipNumY][rightPlayerMapChipNumX])
+						{
+							m_pPlayerData[m_RecvData.PlayerId - 1].PosX -= 2.5f;
+						}
+					}
+
+					if (m_RecvData.KeyCommand[KEY_FIRE] == KEY_PUSH)
+					{
+						printf("push Fire\n");
+						for (int i = 0; i < 3; i++)
+						{
+							if (!m_pPlayerData[m_RecvData.PlayerId - 1].bulletData[i].IsEnable)
+							{
+								m_pPlayerData[m_RecvData.PlayerId - 1].bulletData[i].IsEnable = true;
+								m_pPlayerData[m_RecvData.PlayerId - 1].bulletData[i].IsRight = m_pPlayerData[m_RecvData.PlayerId - 1].IsRight;
+								m_pPlayerData[m_RecvData.PlayerId - 1].bulletData[i].PosX = m_pPlayerData[m_RecvData.PlayerId - 1].PosX;
+								m_pPlayerData[m_RecvData.PlayerId - 1].bulletData[i].PosY = m_pPlayerData[m_RecvData.PlayerId - 1].PosY;
+								break;
+							}
+						}
+					}
+					if (m_RecvData.KeyCommand[KEY_UP] == KEY_PUSH && !m_PlayerState[m_RecvData.PlayerId - 1].IsJump)
+					{
+						m_PlayerState[m_RecvData.PlayerId - 1].IsJump = true;
+						m_PlayerState[m_RecvData.PlayerId - 1].JumpAcceleration = JUMP_POWER;
+					}
+					else if (m_RecvData.KeyCommand[KEY_UP] == KEY_ON &&
+						m_PlayerState[m_RecvData.PlayerId - 1].JumpAcceleration > 0.f)
+					{
+						m_PlayerState[m_RecvData.PlayerId - 1].JumpAcceleration = 0.f;
+					}
 				}
-				if (m_RecvData.KeyCommand[KEY_UP] == KEY_PUSH && !m_PlayerState[m_RecvData.PlayerId - 1].IsJump)
-				{
-					m_PlayerState[m_RecvData.PlayerId - 1].IsJump = true;
-					m_PlayerState[m_RecvData.PlayerId - 1].JumpAcceleration = JUMP_POWER;
-				}
-				else if (m_RecvData.KeyCommand[KEY_UP] == KEY_ON &&
-					m_PlayerState[m_RecvData.PlayerId - 1].JumpAcceleration > 0.f)
-				{
-					m_PlayerState[m_RecvData.PlayerId - 1].JumpAcceleration = 0.f;
-				}
-				sendto(sock, reinterpret_cast<char*>(m_pPlayerData), sizeof(SendData)*playerNum, 0, (struct sockaddr *)&addr, sizeof(addr));
 			}
 		}
-	}
+	});
+	std::thread SendThread([&]()
+	{
+		std::vector<GameDataManager::PlayerData> playerList = GameDataManager::GetInstance()->GetPlayerData();
+		DWORD SyncOld = timeGetTime();	//	ƒVƒXƒeƒ€ŽžŠÔ‚ðŽæ“¾
+		DWORD SyncNow;
+		timeBeginPeriod(1);
+		while (!m_IsThreadEnd)
+		{
+			Sleep(1);
+			SyncNow = timeGetTime();
+			if (SyncNow - SyncOld >= 1000 / 60)
+			{
+				for (int i = 0; i < playerNum; i++)
+				{
+					sendto(sock, reinterpret_cast<char*>(m_pPlayerData), sizeof(SendData)*playerNum, 0, (struct sockaddr *)&playerList[i].Addr, sizeof(playerList[i].Addr));
+				}
+				SyncOld = SyncNow;
+			}
+		}
+		timeBeginPeriod(1);
+	});
+
+	RecvThread.join();
+	SendThread.join();
+
 	closesocket(sock);
 	WSACleanup();
-}
-
-void GameScene::RecvControl()
-{
-
 }
 
 void GameScene::PlayerCollisionCheck()

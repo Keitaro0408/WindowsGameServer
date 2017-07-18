@@ -80,7 +80,6 @@ private:
 		float InpactForceY;
 	};
 
-	void RecvControl();
 	void PlayerCollisionCheck();
 	void BulletControl();
 
