@@ -16,7 +16,7 @@ SceneBase(SceneBase::SCENE_WAIT)
 	FD_ZERO(&m_Readfds);
 	m_Socket = socket(AF_INET, SOCK_DGRAM, 0);
 	m_Addr.sin_family = AF_INET;
-	m_Addr.sin_port = htons(50000);
+	m_Addr.sin_port = htons(PORT);
 	m_Addr.sin_addr.s_addr = INADDR_ANY;
 
 	bind(m_Socket, (sockaddr *)&m_Addr, sizeof(m_Addr));
@@ -76,6 +76,8 @@ void WaitScene::RecvControl(int _socket)
 
 	int len = (int)sizeof(sockaddr_in);
 	recvfrom(_socket, reinterpret_cast<char*>(&m_RecvData), sizeof(RecvData), 0, (sockaddr*)&m_Addr, &len);
+	u_short localPort = ntohs(m_Addr.sin_port);
+
 	if (m_PlayerList.size() == 0)
 	{
 		GameDataManager::PlayerData playerData;

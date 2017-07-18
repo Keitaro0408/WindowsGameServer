@@ -10,7 +10,7 @@
 #include <winsock2.h>
 #include <thread>
 #include <vector>
-
+#define PORT 50000
 
 class GameDataManager {
 public:
